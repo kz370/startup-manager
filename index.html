@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Startup Manager</title>
+    <meta name="description" content="Manage Windows startup applications with scheduling and exception dates" />
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <!-- Header -->
+    <header class="app-header">
+      <h1>⚡ Startup Manager</h1>
+      <div class="header-actions">
+        <button class="btn btn-primary" id="btn-add">＋ Add App</button>
+        <button class="btn btn-success" id="btn-run">▶ Run Apps</button>
+        <button class="btn" id="btn-save">💾 Save</button>
+      </div>
+    </header>
+
+    <!-- Batch Actions Toolbar -->
+    <div class="batch-toolbar" id="batch-toolbar">
+      <span class="batch-count" id="batch-count">0 selected</span>
+      <div class="batch-actions">
+        <button class="btn btn-success" id="btn-batch-run">▶ Start</button>
+        <button class="btn btn-danger" id="btn-batch-stop">⏹ Stop</button>
+        <button class="btn" id="btn-batch-enable">✔️ Enable</button>
+        <button class="btn" id="btn-batch-disable">❌ Disable</button>
+        <button class="btn btn-danger" id="btn-batch-delete">🗑️ Delete</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th class="cell-checkbox"><input type="checkbox" id="cb-select-all" title="Select All" /></th>
+            <th>Status</th>
+            <th>Name</th>
+            <th>Process</th>
+            <th>Path</th>
+            <th>Delay</th>
+            <th>Days</th>
+            <th>Exceptions</th>
+            <th class="col-action">Run</th>
+            <th class="col-action">Enabled</th>
+            <th class="col-action">Edit</th>
+            <th class="col-action">Delete</th>
+          </tr>
+        </thead>
+        <tbody id="apps-tbody">
+          <tr class="empty-row">
+            <td colspan="12">Loading…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <span id="app-count">0 apps</span>
+      <span>Startup Manager v0.1.0</span>
+    </footer>
+
+    <!-- Modal Overlay -->
+    <div id="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="modal-title">Add New App</h2>
+        </div>
+        <div class="modal-body">
+          <!-- Name -->
+          <div class="form-group">
+            <label for="f-name">Name</label>
+            <input type="text" id="f-name" placeholder="e.g. Slack" />
+          </div>
+
+          <!-- Executable (Browse) -->
+          <div class="form-group">
+            <label>Executable</label>
+            <div class="browse-input-row">
+              <input type="text" id="f-path" placeholder="Click Browse to select an .exe" readonly />
+              <button class="btn btn-primary" id="btn-browse" type="button">📂 Browse</button>
+            </div>
+            <input type="hidden" id="f-process" />
+          </div>
+
+          <!-- Row: Args + Window Style -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-args">Arguments</label>
+              <input type="text" id="f-args" placeholder="--silent" />
+            </div>
+            <div class="form-group">
+              <label for="f-winstyle">Window Style</label>
+              <select id="f-winstyle">
+                <option value="Normal">Normal</option>
+                <option value="Minimized">Minimized</option>
+                <option value="Maximized">Maximized</option>
+                <option value="Hidden">Hidden</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row: Delay + Enabled -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-delay">Delay (ms)</label>
+              <input type="number" id="f-delay" value="0" min="0" step="100" />
+            </div>
+            <div class="form-group">
+              <label>Enabled</label>
+              <div class="switch-container">
+                <label class="switch">
+                  <input type="checkbox" id="f-enabled" checked />
+                  <span class="switch-slider"></span>
+                </label>
+                <span id="enabled-label" style="font-size:12px; color:var(--text-secondary)">Enabled</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Days -->
+          <div class="form-group">
+            <label>Days (empty = every day)</label>
+            <div class="checkbox-group" id="days-group">
+              <label class="day-check" id="day-label-0"><input type="checkbox" id="f-day-0" /> Sun</label>
+              <label class="day-check" id="day-label-1"><input type="checkbox" id="f-day-1" /> Mon</label>
+              <label class="day-check" id="day-label-2"><input type="checkbox" id="f-day-2" /> Tue</label>
+              <label class="day-check" id="day-label-3"><input type="checkbox" id="f-day-3" /> Wed</label>
+              <label class="day-check" id="day-label-4"><input type="checkbox" id="f-day-4" /> Thu</label>
+              <label class="day-check" id="day-label-5"><input type="checkbox" id="f-day-5" /> Fri</label>
+              <label class="day-check" id="day-label-6"><input type="checkbox" id="f-day-6" /> Sat</label>
+            </div>
+          </div>
+
+          <!-- Exception Dates -->
+          <div class="form-group">
+            <label>Exception Dates</label>
+            <div class="exception-input-row">
+              <div class="date-picker-wrapper">
+                <input type="date" id="f-exception-date" />
+                <button type="button" class="btn-calendar" id="btn-calendar" title="Pick a date">📅</button>
+              </div>
+              <button class="btn" id="btn-add-exception">+ Add</button>
+            </div>
+            <div id="exception-list"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn" id="btn-cancel">Cancel</button>
+          <button class="btn btn-primary" id="btn-form-save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toast-container"></div>
+  </body>
+</html>
